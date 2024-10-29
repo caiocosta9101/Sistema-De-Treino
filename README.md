@@ -56,12 +56,10 @@ Este projeto utiliza:
 Instale diretamente com o comando:
 
 bash
-Copiar código
 pip install mysql-connector-python
 Ou instale todas as dependências com requirements.txt:
 
 bash
-Copiar código
 pip install -r requirements.txt
 🗄️ Configuração do Banco de Dados
 Crie uma base de dados no MySQL para armazenar as informações do sistema.
@@ -81,7 +79,6 @@ Esses editores facilitam a execução e depuração do projeto.
 Com tudo configurado, rode o sistema usando o comando:
 
 bash
-Copiar código
 python sistema-de-treino.py
 
 
