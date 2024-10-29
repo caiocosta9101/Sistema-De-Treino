@@ -1,3 +1,4 @@
+
 💪 Sistema de Treino 🏋️‍♂️
 🚧 Status: Projeto em Desenvolvimento 🚧
 
@@ -7,9 +8,13 @@ Bem-vindo ao Sistema de Treino! Este projeto é uma aplicação de console desen
 O Sistema de Treino oferece:
 
 📌 Cadastro de usuários com validações de nome, e-mail e senha.
+
 🔐 Login para acesso ao menu de usuário.
+
 📑 Gerenciamento de Treinos: Criação, edição, visualização e remoção de treinos.
+
 💼 Organização de Exercícios: Adicione séries, repetições e cargas a exercícios com base em diferentes periodizações.
+
 🎯 Funcionalidades
 👤 Cadastrar Usuário
 Formulário de registro com validações para garantir dados completos e corretos.
@@ -35,19 +40,50 @@ Editar informações pessoais.
 Este projeto utiliza:
 
 🐍 Python 3.12
+
 🗄️ MySQL 8.0
+
 📦 Biblioteca: mysql-connector-python para comunicação com o banco de dados MySQL
+
 🚀 Como Executar o Projeto
 ⚙️ Pré-requisitos
 🐍 Python 3.12 instalado
-🗄️ MySQL 8.0 instalado
-📦 Biblioteca mysql-connector-python instalada:
-Instale diretamente com o comando:
-bash
-pip install mysql-connector-python
 
-Ou instale todas as dependências com requirements.txt:
+🗄️ MySQL 8.0 instalado
+
+📦 Biblioteca mysql-connector-python instalada:
+
+Instale diretamente com o comando:
+
 bash
+Copiar código
+pip install mysql-connector-python
+Ou instale todas as dependências com requirements.txt:
+
+bash
+Copiar código
+pip install -r requirements.txt
+🗄️ Configuração do Banco de Dados
+Crie uma base de dados no MySQL para armazenar as informações do sistema.
+
+Execute o script de criação de tabelas disponível no arquivo schema.sql para configurar as tabelas corretamente.
+
+💻 Sugestão de Editor de Código
+Para uma experiência de desenvolvimento mais completa, recomendamos o uso de um editor de código:
+
+Visual Studio Code (VS Code)
+
+PyCharm
+
+Esses editores facilitam a execução e depuração do projeto.
+
+▶️ Executando o Projeto
+Com tudo configurado, rode o sistema usando o comando:
+
+bash
+Copiar código
+python sistema-de-treino.py
+
 
 pip install -r requirements.txt
 🗄️ Configuração do Banco de Dados
