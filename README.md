@@ -2,7 +2,7 @@
 
 > 🚧 **Status**: Projeto em Desenvolvimento 🚧
 
-Bem-vindo ao **Sistema de Treino**! Este projeto é uma aplicação de console desenvolvida em **Python 3.12** com **MySQL 8.0** para gerenciamento de rotinas de treino. Ele permite o cadastro de usuários, a criação de treinos personalizados e o acompanhamento do progresso físico, tudo em um ambiente seguro e validado.
+Bem-vindo ao **Sistema de Treino**! Este projeto é uma aplicação de console desenvolvida em **Python 3.12** com **MySQL 8.0** para gerenciamento de rotinas de treino. Ele permite o cadastro de usuários, criação de treinos personalizados e o acompanhamento do progresso , tudo em um ambiente seguro e validado.
 
 ---
 
