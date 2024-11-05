@@ -36,11 +36,16 @@ def obter_numero_positivo(mensagem):
             print("Erro: Por favor, digite um número válido")
 
 # Função para verificar se o usuário quer tentar novamente ou sair
-def tentar_novamente_ou_sair(mensagem="Pressione ENTER para tentar novamente ou digite 'sair' para voltar ao menu: "):
-    resposta = input(mensagem).strip().lower()
-    if resposta == "sair":
-        return False  # Retorna False se o usuário quiser sair
-    return True  # Retorna True para tentar novamente
+def tentar_novamente_ou_sair(mensagem="Pressione 'ENTER' para tentar novamente ou digite 'sair' para voltar ao menu."):
+    while True:
+        resposta = input(mensagem).strip().lower()
+        if resposta == 'sair':
+            return False
+        elif resposta == '':
+            return True
+        else:
+            print("Opção inválida. Pressione 'ENTER' para tentar novamente ou digite 'sair'.")
+
 
 # Função para pausar a execução e esperar o usuário continuar
 def pausar_para_continuar():
