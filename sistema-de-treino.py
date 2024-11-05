@@ -1,11 +1,11 @@
 import mysql.connector
 
-# Configurando a conexão com o banco de dados
+# Configuração da conexão com o banco de dados
 conexao = mysql.connector.connect(
     host='localhost',
-    user='',#coloque o seu user
-    password='',#coloque sua senha
-    database=''#coloque sua base de dados do mysql
+    user='root',  # Coloque o seu user
+    password='1234',  # Coloque sua senha
+    database='musculacao'  # Coloque sua base de dados do mysql
 )
 
 # Função para exibir uma linha decorativa
@@ -15,12 +15,35 @@ def exibir_linha():
 # Função para exibir o menu principal do sistema
 def exibir_menu_principal():
     exibir_linha()
-    print("Sistema de Gerenciamento de Treino")
+    print("Sistema de Gerenciamento de Treino".center(50))
     exibir_linha()
-    print("Escolha uma opção: ")
-    print(" [1] Cadastrar Usuário")
-    print(" [2] Login")
-    print(" [3] Sair")
+    print("[1] Cadastrar Usuário")
+    print("[2] Login")
+    print("[3] Sair")
+    exibir_linha()
+
+# Função para exibir o menu do usuário logado
+def exibir_menu_usuario():
+    exibir_linha()
+    print("MENU DO USUÁRIO".center(50))
+    exibir_linha()
+    print("[1] Gerenciar Treinos")
+    print("[2] Registrar Progresso")
+    print("[3] Visualizar Histórico de Progresso")
+    print("[4] Gerenciar Perfil")
+    print("[5] Sair")
+    exibir_linha()
+
+# Função para exibir o submenu de gerenciamento de treinos
+def exibir_menu_gerenciar_treinos():
+    exibir_linha()
+    print("GERENCIAR TREINOS".center(50))
+    exibir_linha()
+    print("[1] Criar Novo Treino")
+    print("[2] Listar Treinos Existentes")
+    print("[3] Editar Treino")
+    print("[4] Remover Treino")
+    print("[5] Voltar")
     exibir_linha()
 
 # Função para garantir entrada de número positivo
@@ -31,7 +54,7 @@ def obter_numero_positivo(mensagem):
             if valor > 0:
                 return valor  # Retorna o valor se for um número positivo
             else:
-                print("Erro: O valor deve ser um número positivo.") 
+                print("Erro: O valor deve ser um número positivo.")
         except ValueError:
             print("Erro: Por favor, digite um número válido")
 
@@ -46,7 +69,6 @@ def tentar_novamente_ou_sair(mensagem="Pressione 'ENTER' para tentar novamente o
         else:
             print("Opção inválida. Pressione 'ENTER' para tentar novamente ou digite 'sair'.")
 
-
 # Função para pausar a execução e esperar o usuário continuar
 def pausar_para_continuar():
     while input("Pressione ENTER para continuar...") != "":
@@ -55,9 +77,9 @@ def pausar_para_continuar():
 # Função para cadastrar um novo usuário
 def cadastrar_usuario():
     exibir_linha()
-    print("Cadastro de Usuário")
+    print("Cadastro de Usuário".center(50))
     exibir_linha()
-    
+
     # Verificação do nome
     while True:
         nome = input("Digite seu nome: ").strip()
@@ -96,9 +118,9 @@ def cadastrar_usuario():
 # Função para realizar o login do usuário
 def login_usuario():
     exibir_linha()
-    print("LOGIN")
+    print("LOGIN".center(50))
     exibir_linha()
-    
+
     while True:
         email = input("Digite seu e-mail: ").strip()
         senha = input("Digite sua senha: ").strip()
@@ -121,39 +143,14 @@ def login_usuario():
             print(f"Erro ao realizar login: {err}")
             break
 
-# Função para exibir o menu do usuário logado
-def exibir_menu_usuario():
-    exibir_linha()
-    print(" " * 15 + "MENU DO USUÁRIO")
-    exibir_linha()
-    print("[1] Gerenciar Treinos")
-    print("[2] Registrar Progresso")
-    print("[3] Visualizar Histórico de Progresso")
-    print("[4] Gerenciar Perfil")
-    print("[5] Sair")
-    exibir_linha()
-
-# Função para gerenciar treinos (submenu)
-def exibir_menu_gerenciar_treinos():
-    exibir_linha()
-    print(" " * 15 + "GERENCIAR TREINOS")
-    exibir_linha()
-    print("[1] Criar Novo Treino")
-    print("[2] Listar Treinos Existentes")
-    print("[3] Editar Treino")
-    print("[4] Remover Treino")
-    print("[5] Voltar")
-    exibir_linha()
-
 # Função para o fluxo de gerenciamento de treinos
-def gerenciar_treinos():
+def gerenciar_treinos(id_usuario):
     while True:
         exibir_menu_gerenciar_treinos()
         opcao = input("Digite a opção desejada: ").strip()
 
         if opcao == '1':
-            print("Opção: Criar Novo Treino")
-            # Lógica para criar um novo treino
+            criar_novo_treino(id_usuario)  # Certifique-se de que essa linha chama a função correta
         elif opcao == '2':
             print("Opção: Listar Treinos Existentes")
             # Lógica para listar treinos existentes
@@ -167,19 +164,19 @@ def gerenciar_treinos():
             print("Voltando ao menu do usuário...")
             break  # Retorna ao menu do usuário logado
         else:
-            print("=" * 50)
             print("ERRO: Opção inválida! Por favor, escolha uma opção válida.")
-            print("=" * 50)
             pausar_para_continuar()
 
 # Função para o menu do usuário logado
 def menu_usuario_logado(usuario):
+    id_usuario = usuario[0]  # Supondo que o ID do usuário está na primeira posição da tupla `usuario`
+    
     while True:
         exibir_menu_usuario()
         opcao = input("Digite a opção desejada: ").strip()
 
         if opcao == '1':
-            gerenciar_treinos()  # Chama o submenu de gerenciamento de treinos
+            gerenciar_treinos(id_usuario)  # Passa o id_usuario corretamente
         elif opcao == '2':
             print("Opção: Registrar Progresso")
             # Lógica para registrar progresso
@@ -193,10 +190,121 @@ def menu_usuario_logado(usuario):
             print("Saindo do menu do usuário...")
             break  # Retorna ao menu principal
         else:
-            print("=" * 50)
             print("ERRO: Opção inválida! Por favor, escolha uma opção válida.")
-            print("=" * 50)
             pausar_para_continuar()
+
+# Função para criar um novo treino
+def criar_novo_treino(id_usuario):
+    exibir_linha()
+    print("Criar Novo Treino".center(50))
+    exibir_linha()
+
+    # Solicitar o nome do treino
+    nome_treino = input("Digite o nome do treino: ").strip()
+    if not nome_treino:
+        print("Erro: O nome do treino não pode ser vazio.")
+        return
+
+    # Escolher a periodização
+    while True:
+        print("\nEscolha uma periodização para o treino:")
+        try:
+            cursor = conexao.cursor()
+            cursor.execute("SELECT idperiodizacao, nome FROM periodizacao")
+            periodizacoes = cursor.fetchall()
+            cursor.close()
+
+            if not periodizacoes:
+                print("Nenhuma periodização encontrada. Cadastre uma periodização antes de criar o treino.")
+                return
+
+            for idx, periodizacao in enumerate(periodizacoes, start=1):
+                print(f"[{idx}] {periodizacao[1]}")
+
+            escolha_periodizacao = input("Digite o número da periodização desejada: ").strip()
+            if not escolha_periodizacao.isdigit() or int(escolha_periodizacao) not in range(1, len(periodizacoes) + 1):
+                print("Escolha inválida. Tente novamente.")
+                continue
+
+            id_periodizacao = periodizacoes[int(escolha_periodizacao) - 1][0]
+            break
+
+        except mysql.connector.Error as err:
+            print(f"Erro ao obter periodizações: {err}")
+            return
+
+    # Inserir o treino na tabela Treinos
+    try:
+        cursor = conexao.cursor()
+        sql_treino = "INSERT INTO treinos (id_usuario, id_periodizacao, nome) VALUES (%s, %s, %s)"
+        cursor.execute(sql_treino, (id_usuario, id_periodizacao, nome_treino))
+        conexao.commit()
+        id_treino = cursor.lastrowid
+        cursor.close()
+        print("Treino criado com sucesso!")
+    except mysql.connector.Error as err:
+        print(f"Erro ao criar treino: {err}")
+        return
+
+    # Adicionar exercícios ao treino
+    while True:
+        exibir_linha()
+        print("Adicionar Exercício ao Treino".center(50))
+        exibir_linha()
+
+        # Escolher um exercício da tabela Exercicios
+        try:
+            cursor = conexao.cursor()
+            cursor.execute("SELECT idexercicio, nome, grupo_muscular FROM exercicios")
+            exercicios = cursor.fetchall()
+            cursor.close()
+
+            if not exercicios:
+                print("Nenhum exercício encontrado. Cadastre exercícios antes de criar um treino.")
+                return
+
+            for idx, exercicio in enumerate(exercicios, start=1):
+                print(f"[{idx}] {exercicio[1]} - {exercicio[2]}")
+
+            escolha_exercicio = input("Digite o número do exercício desejado: ").strip()
+            if not escolha_exercicio.isdigit() or int(escolha_exercicio) not in range(1, len(exercicios) + 1):
+                print("Escolha inválida.")
+                continue
+
+            id_exercicio = exercicios[int(escolha_exercicio) - 1][0]
+
+        except mysql.connector.Error as err:
+            print(f"Erro ao obter exercícios: {err}")
+            return
+
+        # Solicitar o número de séries, repetições e carga
+        series = obter_numero_positivo("Digite o número de séries: ")
+        repeticoes = obter_numero_positivo("Digite o número de repetições: ")
+        carga = obter_numero_positivo("Digite a carga (em kg) para cada série: ")
+
+        # Inserir cada série individualmente na tabela TreinoDetalhes
+        try:
+            cursor = conexao.cursor()
+            sql_detalhe = "INSERT INTO treinodetalhes (id_treino, id_exercicio, series, repeticoes, carga) VALUES (%s, %s, %s, %s, %s)"
+            for _ in range(series):
+                cursor.execute(sql_detalhe, (id_treino, id_exercicio, 1, repeticoes, carga))  # series = 1 para cada linha
+            conexao.commit()
+            cursor.close()
+            print(f"{series} séries adicionadas com sucesso!")
+        except mysql.connector.Error as err:
+            print(f"Erro ao adicionar exercício ao treino: {err}")
+            return
+
+        # Perguntar se o usuário deseja adicionar mais exercícios
+        while True:
+            adicionar_mais = input("Deseja adicionar outro exercício? (s/n): ").strip().lower()
+            if adicionar_mais in ['s', 'n']:
+                break
+            print("Entrada inválida. Digite 's' para sim ou 'n' para não.")
+
+        if adicionar_mais == 'n':
+            print("Treino finalizado.")
+            break
 
 # Loop principal do menu
 while True:
@@ -213,9 +321,7 @@ while True:
         print("Saindo do sistema...")
         break
     else:
-        print("=" * 50)
         print("ERRO: Opção inválida! Por favor, escolha uma opção válida.")
-        print("=" * 50)
         pausar_para_continuar()
 
 # Fechando a conexão com o banco de dados
