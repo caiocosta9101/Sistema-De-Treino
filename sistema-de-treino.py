@@ -3,9 +3,9 @@ import mysql.connector
 # Configuração da conexão com o banco de dados
 conexao = mysql.connector.connect(
     host='localhost',
-    user='root',  # Coloque o seu user
-    password='1234',  # Coloque sua senha
-    database='musculacao'  # Coloque sua base de dados do mysql
+    user='',  # Coloque o seu user
+    password='',  # Coloque sua senha
+    database=''  # Coloque sua base de dados do mysql
 )
 
 # Função para exibir uma linha decorativa
