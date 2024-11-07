@@ -4,7 +4,7 @@
 ---
 
 ### 🎉 **Bem-vindo ao Sistema de Treino!**  
-Este é um projeto de aplicação em console, desenvolvido em **Python 3.12** com **MySQL 8.0**, voltado para o gerenciamento de rotinas de treino. Ele permite que os usuários se cadastrem, criem treinos personalizados e acompanhem o progresso de forma segura e validada.
+Este é um projeto desenvolvido em **Python 3.12** com **MySQL 8.0**, voltado para o gerenciamento de rotinas de treino. Ele permite que os usuários se cadastrem, criem treinos personalizados e acompanhem o progresso de forma segura e validada.
 
 ---
 
@@ -34,13 +34,13 @@ O **Sistema de Treino** oferece funcionalidades essenciais para a gestão de tre
 - Criação, edição e remoção de treinos personalizados, incluindo séries, repetições e cargas.
 
 #### 📈 **Registrar Progresso**
-- *Planejado para versões futuras.*
+- *Em desenvolvimento*
 
 #### 🕒 **Visualizar Histórico**
-- *Planejado para versões futuras.*
+- *Em desenvolvimento.*
 
 #### ⚙️ **Gerenciar Perfil**
-- Editar informações pessoais do usuário.
+- Em desenvolvimento.
 
 ---
 

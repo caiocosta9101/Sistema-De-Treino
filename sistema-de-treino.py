@@ -3,9 +3,9 @@ import mysql.connector
 # Configuração da conexão com o banco de dados
 conexao = mysql.connector.connect(
     host='localhost',
-    user='root',  # Coloque o seu user
-    password='1234',  # Coloque sua senha
-    database='musculacao'  # Coloque sua base de dados do mysql
+    user='',  # Coloque o seu usuário do mysql
+    password='',  # Coloque a sua senha do mysql
+    database=''  # Coloque sua base de dados do mysql
 )
 
 # Função para exibir uma linha decorativa
@@ -124,7 +124,7 @@ def login_usuario():
     while True:
         email = input("Digite seu e-mail: ").strip()
         senha = input("Digite sua senha: ").strip()
-
+# verificando se o login existe dentro do banco de dados 
         try:
             cursor = conexao.cursor()
             sql = "SELECT * FROM usuarios WHERE email = %s AND senha = %s"
