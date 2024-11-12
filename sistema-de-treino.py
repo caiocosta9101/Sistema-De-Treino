@@ -22,58 +22,6 @@ def exibir_menu_principal():
     print("[3] Sair")
     exibir_linha()
 
-# Função para exibir o menu do usuário logado
-def exibir_menu_usuario():
-    exibir_linha()
-    print("MENU DO USUÁRIO".center(50))
-    exibir_linha()
-    print("[1] Gerenciar Treinos")
-    print("[2] Registrar Progresso")
-    print("[3] Visualizar Histórico de Progresso")
-    print("[4] Gerenciar Perfil")
-    print("[5] Sair")
-    exibir_linha()
-
-# Função para exibir o submenu de gerenciamento de treinos
-def exibir_menu_gerenciar_treinos():
-    exibir_linha()
-    print("GERENCIAR TREINOS".center(50))
-    exibir_linha()
-    print("[1] Criar Novo Treino")
-    print("[2] Listar Treinos Existentes")
-    print("[3] Editar Treino")
-    print("[4] Remover Treino")
-    print("[5] Voltar")
-    exibir_linha()
-
-# Função para garantir entrada de número positivo
-def obter_numero_positivo(mensagem):
-    while True:
-        try:
-            valor = int(input(mensagem).strip())
-            if valor > 0:
-                return valor  # Retorna o valor se for um número positivo
-            else:
-                print("Erro: O valor deve ser um número positivo.")
-        except ValueError:
-            print("Erro: Por favor, digite um número válido")
-
-# Função para verificar se o usuário quer tentar novamente ou sair
-def tentar_novamente_ou_sair(mensagem="Pressione 'ENTER' para tentar novamente ou digite 'sair' para voltar ao menu."):
-    while True:
-        resposta = input(mensagem).strip().lower()
-        if resposta == 'sair':
-            return False
-        elif resposta == '':
-            return True
-        else:
-            print("Opção inválida. Pressione 'ENTER' para tentar novamente ou digite 'sair'.")
-
-# Função para pausar a execução e esperar o usuário continuar
-def pausar_para_continuar():
-    while input("Pressione ENTER para continuar...") != "":
-        pass
-
 # Função para cadastrar um novo usuário
 def cadastrar_usuario():
     exibir_linha()
@@ -115,6 +63,7 @@ def cadastrar_usuario():
     except mysql.connector.Error as err:
         print(f"Erro ao cadastrar usuário: {err}")
 
+
 # Função para realizar o login do usuário
 def login_usuario():
     exibir_linha()
@@ -143,29 +92,18 @@ def login_usuario():
             print(f"Erro ao realizar login: {err}")
             break
 
-# Função para o fluxo de gerenciamento de treinos
-def gerenciar_treinos(id_usuario):
-    while True:
-        exibir_menu_gerenciar_treinos()
-        opcao = input("Digite a opção desejada: ").strip()
 
-        if opcao == '1':
-            criar_novo_treino(id_usuario)  # Certifique-se de que essa linha chama a função correta
-        elif opcao == '2':
-            print("Opção: Listar Treinos Existentes")
-            # Lógica para listar treinos existentes
-        elif opcao == '3':
-            print("Opção: Editar Treino")
-            # Lógica para editar um treino
-        elif opcao == '4':
-            print("Opção: Remover Treino")
-            # Lógica para remover um treino
-        elif opcao == '5':
-            print("Voltando ao menu do usuário...")
-            break  # Retorna ao menu do usuário logado
-        else:
-            print("ERRO: Opção inválida! Por favor, escolha uma opção válida.")
-            pausar_para_continuar()
+# Função para exibir o menu do usuário logado
+def exibir_menu_usuario():
+    exibir_linha()
+    print("MENU DO USUÁRIO".center(50))
+    exibir_linha()
+    print("[1] Gerenciar Treinos")
+    print("[2] Registrar Progresso")
+    print("[3] Visualizar Histórico de Progresso")
+    print("[4] Gerenciar Perfil")
+    print("[5] Sair")
+    exibir_linha()
 
 # Função para o menu do usuário logado
 def menu_usuario_logado(usuario):
@@ -189,6 +127,43 @@ def menu_usuario_logado(usuario):
         elif opcao == '5':
             print("Saindo do menu do usuário...")
             break  # Retorna ao menu principal
+        else:
+            print("ERRO: Opção inválida! Por favor, escolha uma opção válida.")
+            pausar_para_continuar()
+
+
+
+
+# Função para exibir o submenu de gerenciamento de treinos
+def exibir_menu_gerenciar_treinos():
+    exibir_linha()
+    print("GERENCIAR TREINOS".center(50))
+    exibir_linha()
+    print("[1] Criar Novo Treino")
+    print("[2] Listar Treinos Existentes")
+    print("[3] Editar Treino")
+    print("[4] Remover Treino")
+    print("[5] Voltar")
+    exibir_linha()
+
+def gerenciar_treinos(id_usuario):
+    while True:
+        exibir_menu_gerenciar_treinos()
+        opcao = input("Digite a opção desejada: ").strip()
+
+        if opcao == '1':
+            criar_novo_treino(id_usuario)
+        elif opcao == '2':
+            listar_treinos(id_usuario)  # Chama a função de listar treinos
+        elif opcao == '3':
+            print("Opção: Editar Treino")
+            # Lógica para editar um treino
+        elif opcao == '4':
+            print("Opção: Remover Treino")
+            # Lógica para remover um treino
+        elif opcao == '5':
+            print("Voltando ao menu do usuário...")
+            break
         else:
             print("ERRO: Opção inválida! Por favor, escolha uma opção válida.")
             pausar_para_continuar()
@@ -305,6 +280,85 @@ def criar_novo_treino(id_usuario):
         if adicionar_mais == 'n':
             print("Treino finalizado.")
             break
+def listar_treinos(id_usuario):
+    exibir_linha()
+    print("Lista de Treinos".center(50))
+    exibir_linha()
+    
+    try:
+        cursor = conexao.cursor()
+        # Consulta todos os treinos do usuário
+        sql_treinos = """
+            SELECT t.idtreino, t.nome, p.nome AS periodizacao
+            FROM treinos t
+            JOIN periodizacao p ON t.id_periodizacao = p.idperiodizacao
+            WHERE t.id_usuario = %s
+        """
+        cursor.execute(sql_treinos, (id_usuario,))
+        treinos = cursor.fetchall()
+        
+        if not treinos:
+            print("Nenhum treino encontrado.")
+            return
+        
+        # Para cada treino, exibe os detalhes
+        for treino in treinos:
+            id_treino, nome_treino, periodizacao = treino
+            print(f"\nTreino: {nome_treino} (Periodização: {periodizacao})")
+            print("-" * 50)
+            
+            # Consulta os exercícios associados ao treino
+            sql_exercicios = """
+                SELECT e.nome, td.series, td.repeticoes, td.carga
+                FROM treinodetalhes td
+                JOIN exercicios e ON td.id_exercicio = e.idexercicio
+                WHERE td.id_treino = %s
+            """
+            cursor.execute(sql_exercicios, (id_treino,))
+            exercicios = cursor.fetchall()
+            
+            if not exercicios:
+                print("Nenhum exercício encontrado para este treino.")
+            else:
+                for nome_exercicio, series, repeticoes, carga in exercicios:
+                    print(f"Exercício: {nome_exercicio} | Séries: {series} | Repetições: {repeticoes} | Carga: {carga}kg")
+            
+            print("-" * 50)
+        
+        cursor.close()
+    except mysql.connector.Error as err:
+        print(f"Erro ao listar treinos: {err}")
+
+
+
+# Função para garantir entrada de número positivo
+def obter_numero_positivo(mensagem):
+    while True:
+        try:
+            valor = int(input(mensagem).strip())
+            if valor > 0:
+                return valor  # Retorna o valor se for um número positivo
+            else:
+                print("Erro: O valor deve ser um número positivo.")
+        except ValueError:
+            print("Erro: Por favor, digite um número válido")
+
+# Função para verificar se o usuário quer tentar novamente ou sair
+def tentar_novamente_ou_sair(mensagem="Pressione 'ENTER' para tentar novamente ou digite 'sair' para voltar ao menu."):
+    while True:
+        resposta = input(mensagem).strip().lower()
+        if resposta == 'sair':
+            return False
+        elif resposta == '':
+            return True
+        else:
+            print("Opção inválida. Pressione 'ENTER' para tentar novamente ou digite 'sair'.")
+
+# Função para pausar a execução e esperar o usuário continuar
+def pausar_para_continuar():
+    while input("Pressione ENTER para continuar...") != "":
+        pass
+
 
 # Loop principal do menu
 while True:

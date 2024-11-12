@@ -1,6 +1,6 @@
 -- Criar o banco de dados
-CREATE DATABASE musculacao;
-USE musculacao;
+CREATE DATABASE 
+USE # usar database criada dentro do mysql
 
 -- Tabela de usuários
 CREATE TABLE Usuarios (
