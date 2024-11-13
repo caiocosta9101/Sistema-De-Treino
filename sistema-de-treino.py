@@ -154,10 +154,10 @@ def gerenciar_treinos(id_usuario):
         if opcao == '1':
             criar_novo_treino(id_usuario)
         elif opcao == '2':
-            listar_treinos(id_usuario)  # Chama a função de listar treinos
+            listar_treinos(id_usuario)  
         elif opcao == '3':
-            print("Opção: Editar Treino")
-            # Lógica para editar um treino
+            editar_treino(id_usuario)
+           
         elif opcao == '4':
             print("Opção: Remover Treino")
             # Lógica para remover um treino
@@ -280,6 +280,7 @@ def criar_novo_treino(id_usuario):
         if adicionar_mais == 'n':
             print("Treino finalizado.")
             break
+        
 def listar_treinos(id_usuario):
     exibir_linha()
     print("Lista de Treinos".center(50))
@@ -320,14 +321,226 @@ def listar_treinos(id_usuario):
             if not exercicios:
                 print("Nenhum exercício encontrado para este treino.")
             else:
+                # Cabeçalho para a tabela de exercícios
+                print(f"{'Exercício':<20} | {'Séries':<6} | {'Repetições':<12} | {'Carga (kg)':<10}")
+                print("-" * 50)
+                
+                # Exibe os detalhes de cada exercício
                 for nome_exercicio, series, repeticoes, carga in exercicios:
-                    print(f"Exercício: {nome_exercicio} | Séries: {series} | Repetições: {repeticoes} | Carga: {carga}kg")
+                    print(f"{nome_exercicio:<20} | {series:<6} | {repeticoes:<12} | {carga:<10}")
             
             print("-" * 50)
         
         cursor.close()
     except mysql.connector.Error as err:
         print(f"Erro ao listar treinos: {err}")
+
+
+# Função para editar um treino
+def editar_treino(id_usuario):
+    exibir_linha()
+    print("Editar Treino".center(50))
+    exibir_linha()
+    
+    # Exibir lista de treinos para o usuário escolher
+    cursor = conexao.cursor()
+    try:
+        sql_treinos = """
+            SELECT idtreino, nome
+            FROM treinos
+            WHERE id_usuario = %s
+        """
+        cursor.execute(sql_treinos, (id_usuario,))
+        treinos = cursor.fetchall()
+        
+        if not treinos:
+            print("Nenhum treino encontrado para editar.")
+            return
+
+        # Exibir os treinos disponíveis
+        for idx, treino in enumerate(treinos, start=1):
+            print(f"[{idx}] {treino[1]}")
+
+        escolha = input("Digite o número do treino que deseja editar: ").strip()
+        if not escolha.isdigit() or int(escolha) not in range(1, len(treinos) + 1):
+            print("Escolha inválida.")
+            return
+
+        id_treino = treinos[int(escolha) - 1][0]
+
+    except mysql.connector.Error as err:
+        print(f"Erro ao buscar treinos: {err}")
+        return
+    finally:
+        cursor.close()
+    
+    # Menu de opções para edição do treino
+    while True:
+        exibir_linha()
+        print("Opções de Edição".center(50))
+        exibir_linha()
+        print("[1] Alterar Nome do Treino")
+        print("[2] Alterar Periodização")
+        print("[3] Modificar Exercícios")
+        print("[4] Remover Exercício")
+        print("[5] Voltar")
+        exibir_linha()
+        
+        opcao = input("Escolha a opção desejada: ").strip()
+        
+        if opcao == '1':
+            # Editar Nome do Treino
+            novo_nome = input("Digite o novo nome do treino: ").strip()
+            if novo_nome:
+                try:
+                    cursor = conexao.cursor()
+                    cursor.execute("UPDATE treinos SET nome = %s WHERE idtreino = %s", (novo_nome, id_treino))
+                    conexao.commit()
+                    print("Nome do treino atualizado com sucesso!")
+                except mysql.connector.Error as err:
+                    print(f"Erro ao atualizar o nome do treino: {err}")
+                finally:
+                    cursor.close()
+            else:
+                print("O nome do treino não pode ser vazio.")
+
+        elif opcao == '2':
+            # Editar Periodização
+            try:
+                cursor = conexao.cursor()
+                cursor.execute("SELECT idperiodizacao, nome FROM periodizacao")
+                periodizacoes = cursor.fetchall()
+                cursor.close()
+                
+                if not periodizacoes:
+                    print("Nenhuma periodização disponível para selecionar.")
+                    return
+                
+                for idx, periodizacao in enumerate(periodizacoes, start=1):
+                    print(f"[{idx}] {periodizacao[1]}")
+                
+                escolha_periodizacao = input("Digite o número da nova periodização: ").strip()
+                if escolha_periodizacao.isdigit() and int(escolha_periodizacao) in range(1, len(periodizacoes) + 1):
+                    id_periodizacao = periodizacoes[int(escolha_periodizacao) - 1][0]
+                    cursor = conexao.cursor()
+                    cursor.execute("UPDATE treinos SET id_periodizacao = %s WHERE idtreino = %s", (id_periodizacao, id_treino))
+                    conexao.commit()
+                    cursor.close()
+                    print("Periodização atualizada com sucesso!")
+                else:
+                    print("Escolha inválida.")
+            except mysql.connector.Error as err:
+                print(f"Erro ao atualizar a periodização: {err}")
+
+        elif opcao == '3':
+            # Modificar Exercícios (excluir e adicionar novamente)
+            adicionar_exercicios(id_treino)
+        
+        elif opcao == '4':
+            # Remover um Exercício do Treino
+            remover_exercicios(id_treino)
+
+        elif opcao == '5':
+            # Voltar ao menu de gerenciamento de treinos
+            print("Voltando ao menu de gerenciamento de treinos...")
+            break
+        else:
+            print("Opção inválida, por favor escolha uma opção válida.")
+
+
+# Função para adicionar exercícios ao treino
+def adicionar_exercicios(id_treino):
+    while True:
+        exibir_linha()
+        print("Adicionar Exercício ao Treino".center(50))
+        exibir_linha()
+
+        try:
+            cursor = conexao.cursor()
+            cursor.execute("SELECT idexercicio, nome, grupo_muscular FROM exercicios")
+            exercicios = cursor.fetchall()
+            cursor.close()
+
+            if not exercicios:
+                print("Nenhum exercício encontrado. Cadastre exercícios antes de adicionar.")
+                return
+
+            for idx, exercicio in enumerate(exercicios, start=1):
+                print(f"[{idx}] {exercicio[1]} - {exercicio[2]}")
+
+            escolha_exercicio = input("Digite o número do exercício desejado: ").strip()
+            if not escolha_exercicio.isdigit() or int(escolha_exercicio) not in range(1, len(exercicios) + 1):
+                print("Escolha inválida.")
+                continue
+
+            id_exercicio = exercicios[int(escolha_exercicio) - 1][0]
+        except mysql.connector.Error as err:
+            print(f"Erro ao obter exercícios: {err}")
+            return
+
+        series = obter_numero_positivo("Digite o número de séries: ")
+        repeticoes = obter_numero_positivo("Digite o número de repetições: ")
+        carga = obter_numero_positivo("Digite a carga (em kg) para cada série: ")
+
+        try:
+            cursor = conexao.cursor()
+            sql_detalhe = "INSERT INTO treinodetalhes (id_treino, id_exercicio, series, repeticoes, carga) VALUES (%s, %s, %s, %s, %s)"
+            for _ in range(series):
+                cursor.execute(sql_detalhe, (id_treino, id_exercicio, 1, repeticoes, carga))
+            conexao.commit()
+            cursor.close()
+            print(f"{series} séries adicionadas com sucesso!")
+        except mysql.connector.Error as err:
+            print(f"Erro ao adicionar exercício ao treino: {err}")
+            return
+
+        adicionar_mais = input("Deseja adicionar outro exercício? (s/n): ").strip().lower()
+        if adicionar_mais == 'n':
+            print("Edição de exercícios concluída.")
+            break
+
+
+# Função para remover exercícios de um treino
+def remover_exercicios(id_treino):
+    exibir_linha()
+    print("Remover Exercício".center(50))
+    exibir_linha()
+    
+    cursor = conexao.cursor()
+    try:
+        # Buscar exercícios associados ao treino
+        sql_exercicios = """
+            SELECT td.idtreinodetalhe, e.nome
+            FROM treinodetalhes td
+            JOIN exercicios e ON td.id_exercicio = e.idexercicio
+            WHERE td.id_treino = %s
+        """
+        cursor.execute(sql_exercicios, (id_treino,))
+        exercicios = cursor.fetchall()
+        
+        if not exercicios:
+            print("Nenhum exercício encontrado para remover.")
+            return
+
+        # Listar exercícios e solicitar escolha
+        for idx, (id_detalhe, nome_exercicio) in enumerate(exercicios, start=1):
+            print(f"[{idx}] {nome_exercicio}")
+
+        escolha = input("Digite o número do exercício que deseja remover: ").strip()
+        if escolha.isdigit() and int(escolha) in range(1, len(exercicios) + 1):
+            id_detalhe = exercicios[int(escolha) - 1][0]
+            cursor.execute("DELETE FROM treinodetalhes WHERE idtreinodetalhe = %s", (id_detalhe,))
+            conexao.commit()
+            print("Exercício removido com sucesso!")
+        else:
+            print("Escolha inválida.")
+
+    except mysql.connector.Error as err:
+        print(f"Erro ao remover exercício: {err}")
+    finally:
+        cursor.close()
+
+
 
 
 
