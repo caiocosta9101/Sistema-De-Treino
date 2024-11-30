@@ -3,9 +3,9 @@ import mysql.connector
 # Configuração da conexão com o banco de dados
 conexao = mysql.connector.connect(
     host='localhost',
-    user='',  # Coloque o seu usuário do mysql
-    password='',  # Coloque a sua senha do mysql
-    database=''  # Coloque sua base de dados do mysql
+    user='root',  # Coloque o seu usuário do mysql
+    password='1234',  # Coloque a sua senha do mysql
+    database='musculacao'  # Coloque sua base de dados do mysql
 )
 
 # Função para exibir uma linha decorativa
@@ -227,59 +227,83 @@ def criar_novo_treino(id_usuario):
         print("Adicionar Exercício ao Treino".center(50))
         exibir_linha()
 
-        # Escolher um exercício da tabela Exercicios
+        # Mostrar grupos musculares
+        grupos = ["Peitoral", "Costas", "Pernas", "Ombros", "Bíceps", "Tríceps", "Abdômen"]
+        for idx, grupo in enumerate(grupos, start=1):
+            print(f"[{idx}] {grupo}")
+        print("[8] Voltar")
+        exibir_linha()
+
+        escolha_grupo = input("Digite o número do grupo muscular ou '8' para voltar: ").strip()
+        if escolha_grupo == '8':
+            print("Voltando ao menu principal...")
+            break
+        if not escolha_grupo.isdigit() or int(escolha_grupo) not in range(1, len(grupos) + 1):
+            print("Escolha inválida. Tente novamente.")
+            continue
+
+        # Selecionar exercícios do grupo muscular escolhido
+        grupo_selecionado = grupos[int(escolha_grupo) - 1]
         try:
             cursor = conexao.cursor()
-            cursor.execute("SELECT idexercicio, nome, grupo_muscular FROM exercicios")
+            sql = "SELECT idexercicio, nome FROM exercicios WHERE grupo_muscular = %s"
+            cursor.execute(sql, (grupo_selecionado,))
             exercicios = cursor.fetchall()
             cursor.close()
 
             if not exercicios:
-                print("Nenhum exercício encontrado. Cadastre exercícios antes de criar um treino.")
-                return
-
-            for idx, exercicio in enumerate(exercicios, start=1):
-                print(f"[{idx}] {exercicio[1]} - {exercicio[2]}")
-
-            escolha_exercicio = input("Digite o número do exercício desejado: ").strip()
-            if not escolha_exercicio.isdigit() or int(escolha_exercicio) not in range(1, len(exercicios) + 1):
-                print("Escolha inválida.")
+                print(f"Nenhum exercício encontrado para o grupo muscular {grupo_selecionado}.")
                 continue
 
-            id_exercicio = exercicios[int(escolha_exercicio) - 1][0]
+            print(f"\nExercícios do grupo muscular {grupo_selecionado}:")
+            for idx, exercicio in enumerate(exercicios, start=1):
+                print(f"[{idx}] {exercicio[1]}")
+            print("[0] Voltar")
+
+            while True:
+                escolha_exercicio = input("Digite o número do exercício desejado ou '0' para voltar: ").strip()
+                if escolha_exercicio == '0':
+                    break  # Voltar à seleção de grupo muscular
+                if not escolha_exercicio.isdigit() or int(escolha_exercicio) not in range(1, len(exercicios) + 1):
+                    print("Escolha inválida. Tente novamente.")
+                    continue
+
+                # Selecionar o exercício escolhido
+                id_exercicio = exercicios[int(escolha_exercicio) - 1][0]
+
+                # Solicitar detalhes do exercício
+                series = obter_numero_positivo("Digite o número de séries: ")
+                repeticoes = obter_numero_positivo("Digite o número de repetições: ")
+                carga = obter_numero_positivo("Digite a carga (em kg) para cada série: ")
+
+                # Inserir exercício no treino
+                try:
+                    cursor = conexao.cursor()
+                    sql_detalhe = """
+                        INSERT INTO treinodetalhes (id_treino, id_exercicio, series, repeticoes, carga)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """
+                    for _ in range(series):
+                        cursor.execute(sql_detalhe, (id_treino, id_exercicio, 1, repeticoes, carga))
+                    conexao.commit()
+                    cursor.close()
+                    print(f"{series} séries adicionadas com sucesso!")
+                except mysql.connector.Error as err:
+                    print(f"Erro ao adicionar exercício ao treino: {err}")
+                    return
+
+                # Perguntar se deseja adicionar mais exercícios
+                adicionar_mais = validar_sim_nao("Deseja adicionar outro exercício ao mesmo grupo? (s/n): ")
+                if adicionar_mais == 's':
+                    print("Vamos adicionar outro exercício!")
+                elif adicionar_mais == 'n':
+                    print("Voltando ao menu principal...")
+                    break
 
         except mysql.connector.Error as err:
             print(f"Erro ao obter exercícios: {err}")
             return
 
-        # Solicitar o número de séries, repetições e carga
-        series = obter_numero_positivo("Digite o número de séries: ")
-        repeticoes = obter_numero_positivo("Digite o número de repetições: ")
-        carga = obter_numero_positivo("Digite a carga (em kg) para cada série: ")
-
-        # Inserir cada série individualmente na tabela TreinoDetalhes
-        try:
-            cursor = conexao.cursor()
-            sql_detalhe = "INSERT INTO treinodetalhes (id_treino, id_exercicio, series, repeticoes, carga) VALUES (%s, %s, %s, %s, %s)"
-            for _ in range(series):
-                cursor.execute(sql_detalhe, (id_treino, id_exercicio, 1, repeticoes, carga))  # series = 1 para cada linha
-            conexao.commit()
-            cursor.close()
-            print(f"{series} séries adicionadas com sucesso!")
-        except mysql.connector.Error as err:
-            print(f"Erro ao adicionar exercício ao treino: {err}")
-            return
-
-        # Perguntar se o usuário deseja adicionar mais exercícios
-        while True:
-            adicionar_mais = input("Deseja adicionar outro exercício? (s/n): ").strip().lower()
-            if adicionar_mais in ['s', 'n']:
-                break
-            print("Entrada inválida. Digite 's' para sim ou 'n' para não.")
-
-        if adicionar_mais == 'n':
-            print("Treino finalizado.")
-            break
         
 def listar_treinos(id_usuario):
     while True:
@@ -405,7 +429,7 @@ def editar_treino(id_usuario):
         exibir_linha()
         print("[1] Alterar Nome do Treino")
         print("[2] Alterar Periodização")
-        print("[3] Modificar Exercícios")
+        print("[3] Adicionar Exercíco")
         print("[4] Remover Exercício")
         print("[5] Voltar")
         exibir_linha()
@@ -550,8 +574,12 @@ def adicionar_exercicios(id_treino):
                     return
 
                 # Perguntar se deseja adicionar mais exercícios
-                adicionar_mais = input("Deseja adicionar outro exercício ao mesmo grupo? (s/n): ").strip().lower()
-                if adicionar_mais == 'n':
+                 # Perguntar se deseja adicionar mais exercícios
+                adicionar_mais = validar_sim_nao("Deseja adicionar outro exercício ao mesmo grupo? (s/n): ")
+                if adicionar_mais == 's':
+                    print("Vamos adicionar outro exercício!")
+                elif adicionar_mais == 'n':
+                    print("Voltando ao menu principal...")
                     break
 
         except mysql.connector.Error as err:
@@ -581,46 +609,58 @@ def remover_exercicios(id_treino):
             print("Nenhum exercício encontrado para remover.")
             return
 
-        # Exibir a lista de exercícios
-        for idx, (id_exercicio, nome_exercicio) in enumerate(exercicios, start=1):
-            print(f"[{idx}] {nome_exercicio}")
+        while True:  # Mantém o loop para continuar removendo exercícios
+            # Exibir a lista de exercícios
+            print("\nExercícios no treino:")
+            for idx, (id_exercicio, nome_exercicio) in enumerate(exercicios, start=1):
+                print(f"[{idx}] {nome_exercicio}")
 
-        while True:
+            # Escolher o exercício para remover
             escolha = input("Digite o número do exercício que deseja remover ou 'voltar' para sair: ").strip().lower()
             
             if escolha == 'voltar':
                 print("Voltando ao menu anterior...")
-                return  # Retorna ao menu anterior
+                break
 
             if escolha.isdigit() and 1 <= int(escolha) <= len(exercicios):
                 id_exercicio = exercicios[int(escolha) - 1][0]
                 nome_exercicio = exercicios[int(escolha) - 1][1]
-                break
             else:
                 print("Escolha inválida. Por favor, digite um número válido ou 'voltar'.")
+                continue
 
-        # Confirmar a remoção
-        while True:
-            confirmacao = input(f"Tem certeza de que deseja remover o exercício '{nome_exercicio}'? (s/n): ").strip().lower()
+            # Confirmar a remoção
+            confirmacao = validar_sim_nao(f"Tem certeza de que deseja remover o exercício '{nome_exercicio}'? (s/n): ")
             if confirmacao == 's':
                 try:
                     # Remover todas as séries do exercício selecionado para o treino
                     cursor.execute("DELETE FROM treinodetalhes WHERE id_treino = %s AND id_exercicio = %s", (id_treino, id_exercicio))
                     conexao.commit()
-                    print("Exercício removido com sucesso!")
-                    break
+                    print(f"Exercício '{nome_exercicio}' removido com sucesso!")
+                    
+                    # Atualizar a lista de exercícios após remoção
+                    cursor.execute(sql_exercicios, (id_treino,))
+                    exercicios = cursor.fetchall()
+
+                    if not exercicios:
+                        print("Todos os exercícios foram removidos. Voltando ao menu.")
+                        break
                 except mysql.connector.Error as err:
                     print(f"Erro ao remover exercício: {err}")
-                    break
-            elif confirmacao == 'n':
-                print("Remoção cancelada.")
-                break
             else:
-                print("Entrada inválida. Por favor, digite 's' para sim ou 'n' para não.")
+                print("Remoção cancelada.")
+
+            # Perguntar se deseja continuar removendo exercícios
+            continuar = validar_sim_nao("Deseja remover outro exercício? (s/n): ")
+            if continuar == 'n':
+                print("Voltando ao menu anterior...")
+                break
     except mysql.connector.Error as err:
         print(f"Erro ao buscar exercícios: {err}")
     finally:
         cursor.close()
+
+
 
 #função pra remover os treinos
 def remover_treino(id_usuario):
@@ -718,6 +758,16 @@ def pausar_para_continuar():
     while input("Pressione ENTER para continuar...") != "":
         pass
 
+# função pra aceitar só sim ou não
+def validar_sim_nao(mensagem):
+    while True:
+        resposta = input(mensagem).strip().lower()
+        if resposta in ['s', 'n']:
+            return resposta
+        print("Entrada inválida. Por favor, digite 's' para sim ou 'n' para não.")
+
+
+
 
 # Loop principal do menu
 while True:
@@ -739,7 +789,4 @@ while True:
 
 # Fechando a conexão com o banco de dados
 conexao.close()
-
-
-
 
