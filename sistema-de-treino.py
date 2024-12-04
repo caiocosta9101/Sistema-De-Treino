@@ -879,80 +879,114 @@ def registrar_progresso(id_usuario):
         print(f"Erro ao registrar progresso: {err}")
 
 
-    
-
-
 # Função para visualizar histórico de progresso com datas formatadas
 def visualizar_historico(id_usuario):
     exibir_linha()
-    print("Histórico de Progresso".center(50))
+    print("      Histórico de Progresso com Comparação       ".center(50))
     exibir_linha()
 
     try:
-        print("Deseja aplicar algum filtro?")
-        print("[1] Por treino")
-        print("[2] Por período")
-        print("[3] Todos os registros")
+        print("Opções disponíveis:")
+        print("[1] Comparar treino inicial e atual")
+        print("[2] Filtrar por data")  # Nova opção adicionada
         filtro = input("Escolha uma opção: ").strip()
 
-        sql_historico = """
-            SELECT DATE_FORMAT(p.data, '%d/%m/%Y') AS data_formatada, 
-                   t.nome AS treino, e.nome AS exercicio, 
-                   p.serie_progresso, p.repeticoes_progresso, p.carga_progresso, p.observacoes
-            FROM progresso p
-            JOIN treinos t ON p.id_treino = t.idtreino
-            JOIN exercicios e ON p.id_exercicio = e.idexercicio
-            WHERE p.id_usuario = %s
-        """
-        params = [id_usuario]
+        if filtro == '1':
+            # Comparar treino inicial e atual
+            comparar_treino_inicial_e_atual(id_usuario)
 
-        if filtro == '1':  # Filtrar por treino
-            cursor = conexao.cursor()
-            cursor.execute("SELECT idtreino, nome FROM treinos WHERE id_usuario = %s", (id_usuario,))
-            treinos = cursor.fetchall()
-            cursor.close()
-
-            if not treinos:
-                print("Nenhum treino encontrado.")
-                return
-
-            print("Treinos disponíveis:")
-            for idx, (idtreino, nome_treino) in enumerate(treinos, start=1):
-                print(f"[{idx}] {nome_treino}")
-            escolha_treino = int(input("Escolha o treino: ").strip()) - 1
-
-            if escolha_treino not in range(len(treinos)):
-                print("Escolha inválida.")
-                return
-
-            id_treino = treinos[escolha_treino][0]
-            sql_historico += " AND p.id_treino = %s"
-            params.append(id_treino)
-
-        elif filtro == '2':  # Filtrar por período
-            data_inicio = converter_data_para_iso(input("Digite a data inicial (DD/MM/YYYY): ").strip())
-            data_fim = converter_data_para_iso(input("Digite a data final (DD/MM/YYYY): ").strip())
-            sql_historico += " AND p.data BETWEEN %s AND %s"
-            params.extend([data_inicio, data_fim])
-
-        sql_historico += " ORDER BY p.data DESC"
-
-        cursor = conexao.cursor()
-        cursor.execute(sql_historico, params)
-        historico = cursor.fetchall()
-        cursor.close()
-
-        if not historico:
-            print("Nenhum registro encontrado.")
-            return
-
-        print(f"{'Data':<12} {'Treino':<20} {'Exercício':<20} {'Séries':<6} {'Reps':<6} {'Carga (kg)':<10} Observações")
-        print("-" * 80)
-        for data, treino, exercicio, series, reps, carga, obs in historico:
-            print(f"{data:<12} {treino:<20} {exercicio:<20} {series:<6} {reps:<6} {carga:<10.1f} {obs or ''}")
+        elif filtro == '2':
+            print("Opção de filtro por data ainda não implementada.")  # Placeholder para lógica futura
+        else:
+            print("Opção inválida. Tente novamente.")
 
     except mysql.connector.Error as err:
         print(f"Erro ao visualizar histórico: {err}")
+
+# função pra comparar os 2 treinos
+def comparar_treino_inicial_e_atual(id_usuario):
+    exibir_linha()
+    print("Histórico de Progresso com Comparação".center(50))
+    exibir_linha()
+    
+    # Selecionar o treino do usuário
+    try:
+        cursor = conexao.cursor()
+        cursor.execute("SELECT idtreino, nome FROM treinos WHERE id_usuario = %s", (id_usuario,))
+        treinos = cursor.fetchall()
+
+        if not treinos:
+            print("Nenhum treino encontrado.")
+            return
+        
+        print("Treinos disponíveis:")
+        for idx, (id_treino, nome_treino) in enumerate(treinos, start=1):
+            print(f"[{idx}] {nome_treino}")
+        escolha_treino = obter_numero_positivo("Escolha o treino: ") - 1
+
+        if escolha_treino not in range(len(treinos)):
+            print("Escolha inválida.")
+            return
+
+        id_treino = treinos[escolha_treino][0]
+
+        # Buscar dados do treino inicial
+        cursor.execute("""
+            SELECT e.nome, td.series, td.repeticoes, td.carga
+            FROM treinodetalhes td
+            JOIN exercicios e ON td.id_exercicio = e.idexercicio
+            WHERE td.id_treino = %s
+        """, (id_treino,))
+        treino_inicial = cursor.fetchall()
+
+        # Buscar dados do treino atual (último progresso registrado)
+        cursor.execute("""
+            SELECT e.nome, p.serie_progresso, p.repeticoes_progresso, p.carga_progresso
+            FROM progresso p
+            JOIN exercicios e ON p.id_exercicio = e.idexercicio
+            WHERE p.id_treino = %s
+            ORDER BY p.data DESC, p.serie_progresso ASC
+        """, (id_treino,))
+        treino_atual = cursor.fetchall()
+
+        # Organizar dados por exercício
+        exercicios = {}
+        for nome, series, repeticoes, carga in treino_inicial:
+            exercicios[nome] = {"inicial": {"series": series, "reps": repeticoes, "carga": carga, "volume": series * repeticoes * carga}}
+
+        for nome, serie, reps, carga in treino_atual:
+            if nome in exercicios:
+                if "atual" not in exercicios[nome]:
+                    exercicios[nome]["atual"] = {"series": 0, "reps": 0, "carga": 0, "volume": 0}
+                exercicios[nome]["atual"]["series"] += 1
+                exercicios[nome]["atual"]["reps"] = reps
+                exercicios[nome]["atual"]["carga"] = carga
+                exercicios[nome]["atual"]["volume"] += reps * carga
+
+        # Calcular volumes totais
+        volume_inicial_total = sum(data["inicial"]["volume"] for data in exercicios.values())
+        volume_atual_total = sum(data["atual"]["volume"] for data in exercicios.values() if "atual" in data)
+
+        # Exibir comparação
+        print(f"{'Exercício':<30} | {'Volume Inicial':<15} | {'Volume Atual':<15} | {'Progresso (%)':<12}")
+        print("-" * 80)
+        for nome, data in exercicios.items():
+            volume_inicial = data["inicial"]["volume"]
+            volume_atual = data["atual"]["volume"] if "atual" in data else 0
+            progresso = ((volume_atual - volume_inicial) / volume_inicial) * 100 if volume_inicial > 0 else 0
+            print(f"{nome:<30} | {volume_inicial:<15.1f} | {volume_atual:<15.1f} | {progresso:+.2f}%")
+        
+        print("-" * 80)
+        progresso_total = ((volume_atual_total - volume_inicial_total) / volume_inicial_total) * 100 if volume_inicial_total > 0 else 0
+        print(f"{'Volume Total do Treino':<30} | {volume_inicial_total:<15.1f} | {volume_atual_total:<15.1f} | {progresso_total:+.2f}%")
+        print("=" * 50)
+
+    except mysql.connector.Error as err:
+        print(f"Erro ao comparar treinos: {err}")
+    finally:
+        cursor.close()
+
+
 
 # função pra validar a data
 def validar_data(mensagem):
